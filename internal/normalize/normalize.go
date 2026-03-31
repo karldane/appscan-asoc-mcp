@@ -1,7 +1,7 @@
 package normalize
 
 import (
-	"appscan-asoc-mcp/internal/model"
+	"github.com/karldane/appscan-asoc-mcp/internal/model"
 	"time"
 )
 

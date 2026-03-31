@@ -1,4 +1,4 @@
-module appscan-asoc-mcp
+module github.com/karldane/appscan-asoc-mcp
 
 go 1.25.8
 

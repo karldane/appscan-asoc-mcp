@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"appscan-asoc-mcp/internal/client"
-	"appscan-asoc-mcp/internal/config"
-	"appscan-asoc-mcp/internal/tools"
+	"github.com/karldane/appscan-asoc-mcp/internal/client"
+	"github.com/karldane/appscan-asoc-mcp/internal/config"
+	"github.com/karldane/appscan-asoc-mcp/internal/tools"
 
 	"github.com/karldane/mcp-framework/framework"
 )
@@ -23,7 +23,7 @@ func main() {
 	asocClient := client.New(cfg.BaseURL, cfg.KeyID, cfg.KeySecret, cfg.TimeoutSeconds)
 
 	serverConfig := &framework.Config{
-		Name:    "appscan-asoc-mcp",
+		Name:    "github.com/karldane/appscan-asoc-mcp",
 		Version: "1.0.0",
 		Instructions: `AppScan on Cloud MCP Server
 
