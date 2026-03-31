@@ -114,7 +114,7 @@ func (t *FilesUploadTool) Handle(ctx context.Context, args map[string]interface{
 	return string(b), nil
 }
 
-func (t *FilesUploadTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *FilesUploadTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskHigh),
 		framework.WithImpact(framework.ImpactWrite),
@@ -182,7 +182,7 @@ func (t *FileGetTool) Handle(ctx context.Context, args map[string]interface{}) (
 	return string(b), nil
 }
 
-func (t *FileGetTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *FileGetTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),

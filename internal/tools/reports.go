@@ -111,7 +111,7 @@ func (t *ReportsListTool) Handle(ctx context.Context, args map[string]interface{
 	return string(b), nil
 }
 
-func (t *ReportsListTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *ReportsListTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -216,7 +216,7 @@ func (t *ReportGenerateTool) Handle(ctx context.Context, args map[string]interfa
 	return string(b), nil
 }
 
-func (t *ReportGenerateTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *ReportGenerateTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskHigh),
 		framework.WithImpact(framework.ImpactWrite),
@@ -286,7 +286,7 @@ func (t *ReportGetTool) Handle(ctx context.Context, args map[string]interface{})
 	return string(b), nil
 }
 
-func (t *ReportGetTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *ReportGetTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),

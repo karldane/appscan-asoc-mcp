@@ -97,7 +97,7 @@ func (t *AppsListTool) Handle(ctx context.Context, args map[string]interface{}) 
 	return string(b), nil
 }
 
-func (t *AppsListTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *AppsListTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -166,7 +166,7 @@ func (t *AppGetTool) Handle(ctx context.Context, args map[string]interface{}) (s
 	return string(b), nil
 }
 
-func (t *AppGetTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *AppGetTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -289,7 +289,7 @@ func (t *AppsSearchTool) Handle(ctx context.Context, args map[string]interface{}
 	return string(b), nil
 }
 
-func (t *AppsSearchTool) GetEnforcerProfile() *framework.EnforcerProfile {
+func (t *AppsSearchTool) GetEnforcerProfile() framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
