@@ -21,7 +21,7 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.TimeoutSeconds != 30 {
 		t.Errorf("expected default timeout 30, got %d", cfg.TimeoutSeconds)
 	}
-	if cfg.ReadOnly {
+	if cfg.ReadOnly() {
 		t.Error("expected readonly false by default")
 	}
 }

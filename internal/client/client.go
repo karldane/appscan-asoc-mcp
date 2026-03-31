@@ -76,6 +76,20 @@ func (c *Client) Delete(path string) (*http.Response, error) {
 	return c.Do("DELETE", path, nil)
 }
 
+func (c *Client) DoCustom(method, path string, headers map[string]string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(method, c.baseURL+path, body)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", c.AuthHeader())
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	return c.httpClient.Do(req)
+}
+
 type ErrorResponse struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
