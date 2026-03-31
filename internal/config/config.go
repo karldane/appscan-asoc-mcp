@@ -19,8 +19,12 @@ type Config struct {
 	KeyID          string
 	KeySecret      string
 	TimeoutSeconds int
-	ReadOnly       bool
+	isReadOnly     bool
 	LogJSON        bool
+}
+
+func (c *Config) ReadOnly() bool {
+	return c.isReadOnly
 }
 
 func Load() *Config {
@@ -30,7 +34,7 @@ func Load() *Config {
 
 	cfg := &Config{
 		TimeoutSeconds: 30,
-		ReadOnly:       false,
+		isReadOnly:     false,
 		LogJSON:        false,
 	}
 
@@ -80,7 +84,7 @@ func MergeCLIFlags(cfg *Config) *Config {
 		}
 	}
 	if flag.Lookup("readonly") != nil {
-		cfg.ReadOnly = flag.Lookup("readonly").Value.String() == "true"
+		cfg.isReadOnly = flag.Lookup("readonly").Value.String() == "true"
 	}
 	if flag.Lookup("log-json") != nil {
 		cfg.LogJSON = flag.Lookup("log-json").Value.String() == "true"
