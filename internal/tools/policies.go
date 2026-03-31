@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"appscan-asoc-mcp/internal/client"
-	"appscan-asoc-mcp/internal/readonly"
+	"github.com/karldane/appscan-asoc-mcp/internal/client"
+	"github.com/karldane/appscan-asoc-mcp/internal/readonly"
 
 	"github.com/karldane/mcp-framework/framework"
 	"github.com/mark3labs/mcp-go/mcp"
