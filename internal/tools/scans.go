@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/karldane/appscan-asoc-mcp/internal/client"
 	"github.com/karldane/appscan-asoc-mcp/internal/model"
@@ -68,16 +70,27 @@ func (t *ScansListTool) Handle(ctx context.Context, args map[string]interface{})
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/scans?page=%d&pageSize=%d", page, pageSize)
+	// ASoC v4 uses /Scans with AppId query parameter (PascalCase)
+	path := fmt.Sprintf("/Scans?$skip=%d&$top=%d", (page-1)*pageSize, pageSize)
 
 	if v, ok := args["application_id"].(string); ok && v != "" {
-		path += "&applicationId=" + v
+		path += "&AppId=" + v
 	}
+
+	// Build OData filter for scan type and status
+	var filters []string
 	if v, ok := args["scan_family"].(string); ok && v != "" {
-		path += "&scanType=" + v
+		// ASoC uses ScanType filter
+		filters = append(filters, fmt.Sprintf("ScanType eq '%s'", v))
 	}
 	if v, ok := args["status"].(string); ok && v != "" {
-		path += "&state=" + v
+		// ASoC uses State filter
+		filters = append(filters, fmt.Sprintf("State eq '%s'", v))
+	}
+
+	if len(filters) > 0 {
+		filterClause := strings.Join(filters, " and ")
+		path += "&$filter=" + url.QueryEscape(filterClause)
 	}
 
 	resp, err := t.client.Get(path)
@@ -90,17 +103,17 @@ func (t *ScansListTool) Handle(ctx context.Context, args map[string]interface{})
 		return "", client.ParseError(resp)
 	}
 
+	// ASoC v4 returns Items array, not Scans
 	var result struct {
-		Scans      []map[string]any `json:"Scans"`
-		TotalPages int              `json:"TotalPages"`
-		TotalCount int              `json:"TotalCount"`
+		Items []map[string]any `json:"Items"`
+		Count int              `json:"TotalCount"`
 	}
 	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	scans := make([]*model.Scan, 0, len(result.Scans))
-	for _, raw := range result.Scans {
+	scans := make([]*model.Scan, 0, len(result.Items))
+	for _, raw := range result.Items {
 		scans = append(scans, normalize.Scan(raw))
 	}
 
@@ -108,8 +121,7 @@ func (t *ScansListTool) Handle(ctx context.Context, args map[string]interface{})
 		"scans":       scans,
 		"page":        page,
 		"page_size":   pageSize,
-		"total_pages": result.TotalPages,
-		"total_count": result.TotalCount,
+		"total_count": result.Count,
 	}
 
 	b, _ := json.Marshal(output)
