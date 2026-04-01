@@ -60,7 +60,7 @@ func (t *AppsListTool) Handle(ctx context.Context, args map[string]interface{}) 
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/applications?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/Apps?page=%d&pageSize=%d", page, pageSize)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("list applications: %w", err)
@@ -72,16 +72,16 @@ func (t *AppsListTool) Handle(ctx context.Context, args map[string]interface{}) 
 	}
 
 	var result struct {
-		Applications []map[string]any `json:"Applications"`
-		TotalPages   int              `json:"TotalPages"`
-		TotalCount   int              `json:"TotalCount"`
+		Items      []map[string]any `json:"Items"`
+		TotalPages int              `json:"TotalPages"`
+		TotalCount int              `json:"TotalCount"`
 	}
 	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	apps := make([]*model.Application, 0, len(result.Applications))
-	for _, raw := range result.Applications {
+	apps := make([]*model.Application, 0, len(result.Items))
+	for _, raw := range result.Items {
 		apps = append(apps, normalize.Application(raw))
 	}
 
@@ -142,7 +142,7 @@ func (t *AppGetTool) Handle(ctx context.Context, args map[string]interface{}) (s
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/applications/%s", id)
+	path := fmt.Sprintf("/Apps/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get application: %w", err)
@@ -234,7 +234,7 @@ func (t *AppsSearchTool) Handle(ctx context.Context, args map[string]interface{}
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/applications/search?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/applications/search?page=%d&pageSize=%d", page, pageSize)
 
 	type SearchRequest struct {
 		Name         string `json:"Name,omitempty"`

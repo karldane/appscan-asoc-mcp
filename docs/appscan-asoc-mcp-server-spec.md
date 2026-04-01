@@ -49,10 +49,10 @@ The server should support these environment variables:
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `APPSCAN_BASE_URL` | Yes | Base URL for the ASoC tenant API. |
+| `APPSCAN_BASE_URL` | Yes | Hostname of the ASoC tenant (e.g. `https://eu.cloud.appscan.com`). The server appends `/api/v4` automatically and strips any existing path suffix. Regional values: EU=`https://eu.cloud.appscan.com`, US=`https://cloud.appscan.com`. |
 | `APPSCAN_KEY_ID` | Yes | AppScan API key ID. |
 | `APPSCAN_KEY_SECRET` | Yes | AppScan API key secret. |
-| `APPSCAN_API_KEY` | Optional | Combined `KeyID:KeySecret` form if provided directly. |
+| `APPSCAN_API_KEY` | Optional | Combined `KeyID:KeySecret` form if provided directly. Takes precedence over individual key vars. |
 | `APPSCAN_TIMEOUT_SECONDS` | Optional | Default outbound HTTP timeout. |
 | `APPSCAN_POLL_INTERVAL_SECONDS` | Optional | Poll interval for long-running operations if polling helpers are implemented. |
 
@@ -368,10 +368,34 @@ Version 1.0 of the server is complete when all of the following are true:
 - Add optional administrative tools under explicit feature flags.
 - Add cached lookup helpers for applications, asset groups, and policy metadata.
 
+## Implementation notes (v1 discoveries)
+
+The following were confirmed against the real EU ASoC tenant during v1 implementation and take precedence over any contradictory assumptions in this spec:
+
+### Authentication
+
+ASoC v4 uses **direct API key authentication** via the `X-Api-Key` request header with value `KeyID:KeySecret`. No token exchange or Bearer token is required for API calls. Attempting Bearer token auth returns 401.
+
+### API endpoint casing
+
+The ASoC v4 API uses PascalCase paths, not lowercase:
+- Applications: `GET /api/v4/Apps` (not `/applications`)
+- List responses use an `Items` key (not a resource-named key like `Applications`)
+- Single resource: `GET /api/v4/Apps/{id}`
+
+All other endpoints (Scans, Findings, Reports, etc.) also use PascalCase and follow the same `Items`-based list response shape.
+
+### Base URL handling
+
+The server normalizes `APPSCAN_BASE_URL` at startup: if the value does not end with `/api/v4`, the server appends it. This means the caller should pass the hostname only (e.g. `https://eu.cloud.appscan.com`). Tool path strings are written relative to the v4 root (e.g. `/Apps`, `/scans/dast`) without any `/api/v4` prefix - the client layer concatenates the full URL.
+
+### Mutating tools in readonly mode
+
+Resolved: mutating tools remain visible in `tools/list` but fail at execution time with a clear `"server is in readonly mode"` error. No description suffix is added.
+
 ## Open decisions
 
 The following decisions are intentionally left for implementation kickoff:
-- Whether mutating tools in readonly mode should remain callable and fail, or also include an annotation/description suffix stating they are currently blocked.
 - Whether report binary download should be included in v1 or deferred to v1.1.
 - Which exact upload MIME types and file-size limits should be validated client-side versus relying on ASoC upstream validation.
 - Which policy/compliance endpoints are easy enough to justify in v1 once the real tenant surface is enumerated.

@@ -38,16 +38,18 @@ make install
 Set required environment variables:
 
 ```bash
-export APPSCAN_BASE_URL="https://cloud.appscan.com/api/v4"
+export APPSCAN_BASE_URL="https://eu.cloud.appscan.com"
 export APPSCAN_KEY_ID="your-key-id"
 export APPSCAN_KEY_SECRET="your-key-secret"
 ```
 
 Or use combined API key form:
 ```bash
-export APPSCAN_BASE_URL="https://cloud.appscan.com/api/v4"
+export APPSCAN_BASE_URL="https://eu.cloud.appscan.com"
 export APPSCAN_API_KEY="keyid:keysecret"
 ```
+
+> **Note:** `APPSCAN_BASE_URL` should be the **hostname only** (e.g. `https://eu.cloud.appscan.com`). The server automatically appends `/api/v4` and strips any existing path suffix to avoid double-pathing. If you pass a URL that already ends with `/api/v4` it is also handled correctly.
 
 Run the server:
 ```bash
@@ -100,6 +102,18 @@ See [Tool Reference](docs/TOOLS.md) for detailed tool documentation.
 - `policies_list` - List security policies
 - `compliance_summary` - Get compliance summary
 
+## Authentication
+
+The server authenticates to ASoC using the `X-Api-Key` request header with the value `KeyID:KeySecret`. This is the direct API key form - no token exchange is required. The header is set on every outgoing HTTP request by the client layer.
+
+> **Regional endpoints:** For EU tenants use `https://eu.cloud.appscan.com`. For US (default) use `https://cloud.appscan.com`.
+
+## ASoC API Notes
+
+- All API calls target **REST API v4** (`/api/v4/...`). The base URL should be the hostname only; the server handles the `/api/v4` prefix internally.
+- The applications endpoint is `/api/v4/Apps` (capitalized, not `/applications`). List responses use an `Items` key. This reflects the actual ASoC v4 API surface, which differs from some documentation examples.
+- Scan results may be `queued` rather than `started` when the tenant has only one runner - this is a valid outcome, not an error.
+
 ## Architecture
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
@@ -112,9 +126,19 @@ make test
 
 Run specific test packages:
 ```bash
-go test ./internal/config/... -v
+go test ./internal/tools/... -v
 go test ./internal/normalize/... -v
+go test ./internal/config/... -v
 ```
+
+Coverage summary (as of v1.0):
+
+| Package | Coverage |
+|---|---|
+| `internal/tools` | ~86% |
+| `internal/normalize` | ~96% |
+| `internal/readonly` | 100% |
+| `internal/config` | ~68% |
 
 ## License
 

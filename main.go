@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/karldane/appscan-asoc-mcp/internal/client"
 	"github.com/karldane/appscan-asoc-mcp/internal/config"
@@ -20,7 +21,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	asocClient := client.New(cfg.BaseURL, cfg.KeyID, cfg.KeySecret, cfg.TimeoutSeconds)
+	// Ensure base URL ends with /api/v4
+	baseURL := cfg.BaseURL
+	if !strings.HasSuffix(baseURL, "/api/v4") {
+		if strings.HasSuffix(baseURL, "/") {
+			baseURL = baseURL + "api/v4"
+		} else {
+			baseURL = baseURL + "/api/v4"
+		}
+	}
+
+	asocClient := client.New(baseURL, cfg.KeyID, cfg.KeySecret, cfg.TimeoutSeconds)
 
 	serverConfig := &framework.Config{
 		Name:    "github.com/karldane/appscan-asoc-mcp",

@@ -66,7 +66,7 @@ func (t *ReportsListTool) Handle(ctx context.Context, args map[string]interface{
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/reports?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/reports?page=%d&pageSize=%d", page, pageSize)
 
 	if v, ok := args["application_id"].(string); ok && v != "" {
 		path += "&applicationId=" + v
@@ -188,7 +188,7 @@ func (t *ReportGenerateTool) Handle(ctx context.Context, args map[string]interfa
 		req.ScanID = scanID
 	}
 
-	resp, err := t.client.Post("/api/v4/reports/generate", req)
+	resp, err := t.client.Post("/reports/generate", req)
 	if err != nil {
 		return "", fmt.Errorf("generate report: %w", err)
 	}
@@ -262,7 +262,7 @@ func (t *ReportGetTool) Handle(ctx context.Context, args map[string]interface{})
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/reports/%s", id)
+	path := fmt.Sprintf("/reports/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get report: %w", err)

@@ -56,7 +56,7 @@ func (t *AssetGroupsListTool) Handle(ctx context.Context, args map[string]interf
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/assetgroups?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/assetgroups?page=%d&pageSize=%d", page, pageSize)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("list asset groups: %w", err)
@@ -142,7 +142,7 @@ func (t *PoliciesListTool) Handle(ctx context.Context, args map[string]interface
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/policies?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/policies?page=%d&pageSize=%d", page, pageSize)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("list policies: %w", err)
@@ -227,7 +227,7 @@ func (t *ComplianceSummaryTool) Handle(ctx context.Context, args map[string]inte
 		return "", fmt.Errorf("application_id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/compliance/summary")
+	path := fmt.Sprintf("/compliance/summary")
 	type SummaryRequest struct {
 		ApplicationID string `json:"ApplicationId"`
 		ScanID        string `json:"ScanId,omitempty"`

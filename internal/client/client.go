@@ -2,7 +2,6 @@ package client
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,8 +29,7 @@ func New(baseURL, keyID, keySecret string, timeoutSeconds int) *Client {
 }
 
 func (c *Client) AuthHeader() string {
-	encoded := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", c.keyID, c.keySecret)))
-	return fmt.Sprintf("Basic %s", encoded)
+	return fmt.Sprintf("%s:%s", c.keyID, c.keySecret)
 }
 
 func (c *Client) BaseURL() string {
@@ -53,11 +51,29 @@ func (c *Client) Do(method, path string, body interface{}) (*http.Response, erro
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", c.AuthHeader())
+	req.Header.Set("X-Api-Key", c.AuthHeader())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	return c.httpClient.Do(req)
+	// Debug logging
+	fmt.Printf("[DEBUG] %s %s\n", method, c.baseURL+path)
+	fmt.Printf("[DEBUG] X-Api-Key: %s\n", c.AuthHeader())
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("do request: %w", err)
+	}
+
+	// Debug logging
+	fmt.Printf("[DEBUG] Response Status: %d\n", resp.StatusCode)
+	if resp.StatusCode != 200 {
+		respBody, _ := io.ReadAll(resp.Body)
+		fmt.Printf("[DEBUG] Response Body: %s\n", string(respBody))
+		// Reset body for later use
+		resp.Body = io.NopCloser(bytes.NewBuffer(respBody))
+	}
+
+	return resp, nil
 }
 
 func (c *Client) Get(path string) (*http.Response, error) {
@@ -82,7 +98,7 @@ func (c *Client) DoCustom(method, path string, headers map[string]string, body i
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", c.AuthHeader())
+	req.Header.Set("X-Api-Key", c.AuthHeader())
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}

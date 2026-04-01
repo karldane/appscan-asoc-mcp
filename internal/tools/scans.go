@@ -72,7 +72,7 @@ func (t *ScansListTool) Handle(ctx context.Context, args map[string]interface{})
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/scans?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/scans?page=%d&pageSize=%d", page, pageSize)
 
 	if v, ok := args["application_id"].(string); ok && v != "" {
 		path += "&applicationId=" + v
@@ -165,7 +165,7 @@ func (t *ScanGetTool) Handle(ctx context.Context, args map[string]interface{}) (
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/scans/%s", id)
+	path := fmt.Sprintf("/scans/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get scan: %w", err)
@@ -236,7 +236,7 @@ func (t *ScanStatusTool) Handle(ctx context.Context, args map[string]interface{}
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/scans/%s", id)
+	path := fmt.Sprintf("/scans/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get scan status: %w", err)
@@ -352,7 +352,7 @@ func (t *DASTScanStartTool) Handle(ctx context.Context, args map[string]interfac
 		req.PolicyID = policyID
 	}
 
-	resp, err := t.client.Post("/api/v4/scans/dast", req)
+	resp, err := t.client.Post("/scans/dast", req)
 	if err != nil {
 		return "", fmt.Errorf("start scan: %w", err)
 	}
@@ -453,7 +453,7 @@ func (t *DASTScanFromTemplateTool) Handle(ctx context.Context, args map[string]i
 		req.Name = scanName
 	}
 
-	resp, err := t.client.Post("/api/v4/scans/dast/fromfile", req)
+	resp, err := t.client.Post("/scans/dast/fromfile", req)
 	if err != nil {
 		return "", fmt.Errorf("start scan from template: %w", err)
 	}
@@ -527,7 +527,7 @@ func (t *ScanCancelTool) Handle(ctx context.Context, args map[string]interface{}
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/scans/%s/cancel", id)
+	path := fmt.Sprintf("/scans/%s/cancel", id)
 	resp, err := t.client.Post(path, nil)
 	if err != nil {
 		return "", fmt.Errorf("cancel scan: %w", err)

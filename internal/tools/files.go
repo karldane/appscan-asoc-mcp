@@ -75,14 +75,14 @@ func (t *FilesUploadTool) Handle(ctx context.Context, args map[string]interface{
 
 	writer.Close()
 
-	req, err := http.NewRequest("POST", t.client.BaseURL()+"/api/v4/files/upload", &body)
+	req, err := http.NewRequest("POST", t.client.BaseURL()+"/files/upload", &body)
 	if err != nil {
 		return "", fmt.Errorf("create request: %w", err)
 	}
 	req.Header.Set("Authorization", t.client.AuthHeader())
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	resp, err := t.client.DoCustom("POST", "/api/v4/files/upload",
+	resp, err := t.client.DoCustom("POST", "/files/upload",
 		map[string]string{"Content-Type": writer.FormDataContentType()},
 		&body)
 	if err != nil {
@@ -107,7 +107,7 @@ func (t *FilesUploadTool) Handle(ctx context.Context, args map[string]interface{
 		"id":       result.ID,
 		"name":     result.Name,
 		"size":     result.Size,
-		"file_url": fmt.Sprintf("%s/api/v4/files/%s", t.client.BaseURL(), result.ID),
+		"file_url": fmt.Sprintf("%s%s", t.client.BaseURL(), result.ID),
 	}
 
 	b, _ := json.Marshal(output)
@@ -159,7 +159,7 @@ func (t *FileGetTool) Handle(ctx context.Context, args map[string]interface{}) (
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/files/%s", id)
+	path := fmt.Sprintf("/files/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get file: %w", err)

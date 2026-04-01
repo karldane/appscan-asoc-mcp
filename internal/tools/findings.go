@@ -66,7 +66,7 @@ func (t *FindingsListTool) Handle(ctx context.Context, args map[string]interface
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/findings?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/findings?page=%d&pageSize=%d", page, pageSize)
 
 	if v, ok := args["application_id"].(string); ok && v != "" {
 		path += "&applicationId=" + v
@@ -187,7 +187,7 @@ func (t *FindingsSearchTool) Handle(ctx context.Context, args map[string]interfa
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/api/v4/findings/search?page=%d&pageSize=%d", page, pageSize)
+	path := fmt.Sprintf("/findings/search?page=%d&pageSize=%d", page, pageSize)
 
 	if v, ok := args["application_id"].(string); ok && v != "" {
 		path += "&applicationId=" + v
@@ -305,7 +305,7 @@ func (t *FindingGetTool) Handle(ctx context.Context, args map[string]interface{}
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/api/v4/findings/%s", id)
+	path := fmt.Sprintf("/findings/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get finding: %w", err)
@@ -392,7 +392,7 @@ func (t *FindingGroupSummaryTool) Handle(ctx context.Context, args map[string]in
 		groupBy = "severity"
 	}
 
-	path := fmt.Sprintf("/api/v4/findings/summary/%s", groupBy)
+	path := fmt.Sprintf("/findings/summary/%s", groupBy)
 	type SummaryRequest struct {
 		ApplicationID string `json:"ApplicationId"`
 		ScanID        string `json:"ScanId,omitempty"`

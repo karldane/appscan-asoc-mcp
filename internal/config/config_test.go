@@ -7,6 +7,15 @@ import (
 
 func TestLoadDefaults(t *testing.T) {
 	ResetForTest()
+	// Clear any env vars that may be set in the shell
+	os.Unsetenv("APPSCAN_BASE_URL")
+	os.Unsetenv("APPSCAN_KEY_ID")
+	os.Unsetenv("APPSCAN_KEY_SECRET")
+	os.Unsetenv("APPSCAN_API_KEY")
+	defer os.Unsetenv("APPSCAN_BASE_URL")
+	defer os.Unsetenv("APPSCAN_KEY_ID")
+	defer os.Unsetenv("APPSCAN_KEY_SECRET")
+	defer os.Unsetenv("APPSCAN_API_KEY")
 	cfg := Load()
 
 	if cfg.BaseURL != "" {
