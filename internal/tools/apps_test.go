@@ -88,30 +88,6 @@ func TestAppsListTool_Success(t *testing.T) {
 	assert.Equal(t, float64(2), output["total_count"])
 }
 
-func TestAppsListTool_ReadOnly(t *testing.T) {
-	// Create a mock HTTP server
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// This shouldn't be called in readonly mode
-		t.Error("Request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	// Create client pointing to our test server
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-
-	// Create a readonly config
-	readonlyCfg := &readonlyFlag{true}
-
-	// Create the tool with readonly enabled
-	tool := NewAppsListTool(c, readonlyCfg)
-
-	// Call the tool
-	_, err := tool.Handle(context.Background(), map[string]interface{}{})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "server is in readonly mode")
-}
-
 func TestAppGetTool_Success(t *testing.T) {
 	// Create a mock HTTP server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -160,30 +136,6 @@ func TestAppGetTool_Success(t *testing.T) {
 	raw := output["raw"].(map[string]interface{})
 	assert.Equal(t, "test-app-id-1", raw["Id"])
 	assert.Equal(t, "Test App 1", raw["Name"])
-}
-
-func TestAppGetTool_ReadOnly(t *testing.T) {
-	// Create a mock HTTP server
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// This shouldn't be called in readonly mode
-		t.Error("Request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	// Create client pointing to our test server
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-
-	// Create a readonly config
-	readonlyCfg := &readonlyFlag{true}
-
-	// Create the tool with readonly enabled
-	tool := NewAppGetTool(c, readonlyCfg)
-
-	// Call the tool
-	_, err := tool.Handle(context.Background(), map[string]interface{}{"id": "test-app-id-1"})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "server is in readonly mode")
 }
 
 // ---------------------------------------------------------------------------
@@ -242,21 +194,6 @@ func TestAppsSearchTool_Success(t *testing.T) {
 	assert.Equal(t, float64(20), output["page_size"])
 	assert.Equal(t, float64(1), output["total_pages"])
 	assert.Equal(t, float64(1), output["total_count"])
-}
-
-func TestAppsSearchTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewAppsSearchTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{"name": "anything"})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
 }
 
 func TestAppGetTool_NotFound(t *testing.T) {

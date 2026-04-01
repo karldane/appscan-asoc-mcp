@@ -8,7 +8,6 @@ import (
 	"github.com/karldane/appscan-asoc-mcp/internal/client"
 	"github.com/karldane/appscan-asoc-mcp/internal/model"
 	"github.com/karldane/appscan-asoc-mcp/internal/normalize"
-	"github.com/karldane/appscan-asoc-mcp/internal/readonly"
 
 	"github.com/karldane/mcp-framework/framework"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -53,10 +52,6 @@ func (t *FindingsListTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *FindingsListTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	page := 1
 	pageSize := 50
 	if v, ok := args["page"].(float64); ok {
@@ -174,10 +169,6 @@ func (t *FindingsSearchTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *FindingsSearchTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	page := 1
 	pageSize := 50
 	if v, ok := args["page"].(float64); ok {
@@ -296,10 +287,6 @@ func (t *FindingGetTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *FindingGetTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	id, _ := args["id"].(string)
 	if id == "" {
 		return "", fmt.Errorf("id is required")
@@ -376,10 +363,6 @@ func (t *FindingGroupSummaryTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *FindingGroupSummaryTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	appID, _ := args["application_id"].(string)
 	scanID, _ := args["scan_id"].(string)
 	groupBy, _ := args["group_by"].(string)

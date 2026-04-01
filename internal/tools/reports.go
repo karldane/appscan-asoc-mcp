@@ -53,10 +53,6 @@ func (t *ReportsListTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *ReportsListTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	page := 1
 	pageSize := 20
 	if v, ok := args["page"].(float64); ok {
@@ -253,10 +249,6 @@ func (t *ReportGetTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *ReportGetTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	id, _ := args["id"].(string)
 	if id == "" {
 		return "", fmt.Errorf("id is required")

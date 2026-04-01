@@ -64,20 +64,6 @@ func TestAssetGroupsListTool_Success(t *testing.T) {
 	assert.Equal(t, float64(1), output["total_count"])
 }
 
-func TestAssetGroupsListTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewAssetGroupsListTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}
 
 // ---------------------------------------------------------------------------
 // PoliciesListTool tests
@@ -131,20 +117,6 @@ func TestPoliciesListTool_Success(t *testing.T) {
 	assert.Equal(t, float64(1), output["total_count"])
 }
 
-func TestPoliciesListTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewPoliciesListTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}
 
 // ---------------------------------------------------------------------------
 // ComplianceSummaryTool tests
@@ -247,19 +219,3 @@ func TestComplianceSummaryTool_MissingApplicationID(t *testing.T) {
 	assert.Contains(t, err.Error(), "application_id is required")
 }
 
-func TestComplianceSummaryTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewComplianceSummaryTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{
-		"application_id": "app-id-1",
-	})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}

@@ -75,20 +75,6 @@ func TestReportsListTool_Success(t *testing.T) {
 	assert.Equal(t, float64(1), output["total_count"])
 }
 
-func TestReportsListTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewReportsListTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}
 
 // ---------------------------------------------------------------------------
 // ReportGenerateTool tests
@@ -252,17 +238,3 @@ func TestReportGetTool_NotFound(t *testing.T) {
 	assert.Contains(t, err.Error(), "report not found: no-such-report")
 }
 
-func TestReportGetTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewReportGetTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{"id": "report-id-1"})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}

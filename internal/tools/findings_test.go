@@ -122,20 +122,6 @@ func TestFindingsListTool_WithFilters(t *testing.T) {
 	assert.Equal(t, float64(10), output["page_size"])
 }
 
-func TestFindingsListTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewFindingsListTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}
 
 // ---------------------------------------------------------------------------
 // FindingsSearchTool tests
@@ -203,22 +189,6 @@ func TestFindingsSearchTool_Success(t *testing.T) {
 	assert.Equal(t, float64(1), output["total_count"])
 }
 
-func TestFindingsSearchTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewFindingsSearchTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{
-		"application_id": "app-id-1",
-	})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}
 
 // ---------------------------------------------------------------------------
 // FindingGetTool tests
@@ -287,20 +257,6 @@ func TestFindingGetTool_NotFound(t *testing.T) {
 	assert.Contains(t, err.Error(), "finding not found: no-such-finding")
 }
 
-func TestFindingGetTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewFindingGetTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{"id": "finding-id-1"})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}
 
 // ---------------------------------------------------------------------------
 // FindingGroupSummaryTool tests
@@ -376,19 +332,3 @@ func TestFindingGroupSummaryTool_DefaultGroupBy(t *testing.T) {
 	assert.NotEmpty(t, result)
 }
 
-func TestFindingGroupSummaryTool_ReadOnly(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("request should not be made in readonly mode")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
-	tool := NewFindingGroupSummaryTool(c, &readonlyFlag{true})
-
-	_, err := tool.Handle(context.Background(), map[string]interface{}{
-		"application_id": "app-id-1",
-	})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "readonly mode")
-}

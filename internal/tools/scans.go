@@ -59,10 +59,6 @@ func (t *ScansListTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *ScansListTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	page := 1
 	pageSize := 20
 	if v, ok := args["page"].(float64); ok {
@@ -156,9 +152,6 @@ func (t *ScanGetTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *ScanGetTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
 
 	id, _ := args["id"].(string)
 	if id == "" {
@@ -227,9 +220,6 @@ func (t *ScanStatusTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *ScanStatusTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
 
 	id, _ := args["id"].(string)
 	if id == "" {

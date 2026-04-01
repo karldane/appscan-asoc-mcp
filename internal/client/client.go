@@ -55,25 +55,7 @@ func (c *Client) Do(method, path string, body interface{}) (*http.Response, erro
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	// Debug logging
-	fmt.Printf("[DEBUG] %s %s\n", method, c.baseURL+path)
-	fmt.Printf("[DEBUG] X-Api-Key: %s\n", c.AuthHeader())
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("do request: %w", err)
-	}
-
-	// Debug logging
-	fmt.Printf("[DEBUG] Response Status: %d\n", resp.StatusCode)
-	if resp.StatusCode != 200 {
-		respBody, _ := io.ReadAll(resp.Body)
-		fmt.Printf("[DEBUG] Response Body: %s\n", string(respBody))
-		// Reset body for later use
-		resp.Body = io.NopCloser(bytes.NewBuffer(respBody))
-	}
-
-	return resp, nil
+	return c.httpClient.Do(req)
 }
 
 func (c *Client) Get(path string) (*http.Response, error) {

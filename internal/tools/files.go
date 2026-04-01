@@ -150,10 +150,6 @@ func (t *FileGetTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *FileGetTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	id, _ := args["id"].(string)
 	if id == "" {
 		return "", fmt.Errorf("id is required")

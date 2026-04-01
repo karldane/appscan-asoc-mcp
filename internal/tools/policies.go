@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/karldane/appscan-asoc-mcp/internal/client"
-	"github.com/karldane/appscan-asoc-mcp/internal/readonly"
 
 	"github.com/karldane/mcp-framework/framework"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -43,10 +42,6 @@ func (t *AssetGroupsListTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *AssetGroupsListTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	page := 1
 	pageSize := 20
 	if v, ok := args["page"].(float64); ok {
@@ -129,10 +124,6 @@ func (t *PoliciesListTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *PoliciesListTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	page := 1
 	pageSize := 20
 	if v, ok := args["page"].(float64); ok {
@@ -216,10 +207,6 @@ func (t *ComplianceSummaryTool) Schema() mcp.ToolInputSchema {
 }
 
 func (t *ComplianceSummaryTool) Handle(ctx context.Context, args map[string]interface{}) (string, error) {
-	if readonly.IsReadOnly(t.cfg) {
-		return "", fmt.Errorf("server is in readonly mode")
-	}
-
 	appID, _ := args["application_id"].(string)
 	scanID, _ := args["scan_id"].(string)
 
