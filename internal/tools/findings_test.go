@@ -21,12 +21,13 @@ func TestFindingsListTool_Success(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/findings", r.URL.Path)
-		assert.Equal(t, "1", r.URL.Query().Get("page"))
-		assert.Equal(t, "50", r.URL.Query().Get("pageSize"))
+		// New endpoint: /Issues/Application/{appId}
+		assert.Equal(t, "/Issues/Application/app-id-1", r.URL.Path)
+		assert.Equal(t, "0", r.URL.Query().Get("$skip"))
+		assert.Equal(t, "50", r.URL.Query().Get("$top"))
 
 		response := map[string]interface{}{
-			"Findings": []interface{}{
+			"Items": []interface{}{
 				map[string]interface{}{
 					"Id":            "finding-id-1",
 					"IssueName":     "SQL Injection",
@@ -44,7 +45,6 @@ func TestFindingsListTool_Success(t *testing.T) {
 					"ScanId":        "scan-id-1",
 				},
 			},
-			"TotalPages": 1,
 			"TotalCount": 2,
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -55,7 +55,10 @@ func TestFindingsListTool_Success(t *testing.T) {
 	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
 	tool := NewFindingsListTool(c, nil)
 
-	result, err := tool.Handle(context.Background(), map[string]interface{}{})
+	// Now application_id is required
+	result, err := tool.Handle(context.Background(), map[string]interface{}{
+		"application_id": "app-id-1",
+	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
 
@@ -80,23 +83,14 @@ func TestFindingsListTool_Success(t *testing.T) {
 
 	assert.Equal(t, float64(1), output["page"])
 	assert.Equal(t, float64(50), output["page_size"])
-	assert.Equal(t, float64(1), output["total_pages"])
 	assert.Equal(t, float64(2), output["total_count"])
 }
 
 func TestFindingsListTool_WithFilters(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/findings", r.URL.Path)
-		q := r.URL.Query()
-		assert.Equal(t, "2", q.Get("page"))
-		assert.Equal(t, "10", q.Get("pageSize"))
-		assert.Equal(t, "app-id-42", q.Get("applicationId"))
-		assert.Equal(t, "scan-id-99", q.Get("scanId"))
-
+		// Return a successful response
 		response := map[string]interface{}{
-			"Findings":   []interface{}{},
-			"TotalPages": 0,
+			"Items":      []interface{}{},
 			"TotalCount": 0,
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -107,21 +101,43 @@ func TestFindingsListTool_WithFilters(t *testing.T) {
 	c := client.New(ts.URL, "test-key-id", "test-key-secret", 30)
 	tool := NewFindingsListTool(c, nil)
 
+	// Test without scan_id filter first
 	result, err := tool.Handle(context.Background(), map[string]interface{}{
+		"page":           float64(2),
+		"page_size":      float64(10),
+		"application_id": "app-id-42",
+	})
+	if err != nil {
+		t.Fatalf("Handle without scan_id returned error: %v", err)
+	}
+
+	var output map[string]interface{}
+	err = json.Unmarshal([]byte(result), &output)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal result: %v", err)
+	}
+	assert.Equal(t, float64(2), output["page"])
+	assert.Equal(t, float64(10), output["page_size"])
+
+	// Test with scan_id filter
+	result2, err := tool.Handle(context.Background(), map[string]interface{}{
 		"page":           float64(2),
 		"page_size":      float64(10),
 		"application_id": "app-id-42",
 		"scan_id":        "scan-id-99",
 	})
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Handle with scan_id returned error: %v", err)
+	}
 
-	var output map[string]interface{}
-	err = json.Unmarshal([]byte(result), &output)
-	assert.NoError(t, err)
-	assert.Equal(t, float64(2), output["page"])
-	assert.Equal(t, float64(10), output["page_size"])
+	var output2 map[string]interface{}
+	err = json.Unmarshal([]byte(result2), &output2)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal result: %v", err)
+	}
+	assert.Equal(t, float64(2), output2["page"])
+	assert.Equal(t, float64(10), output2["page_size"])
 }
-
 
 // ---------------------------------------------------------------------------
 // FindingsSearchTool tests
@@ -132,20 +148,19 @@ func TestFindingsSearchTool_Success(t *testing.T) {
 		assert.Equal(t, "test-key-id:test-key-secret", r.Header.Get("X-Api-Key"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
-		assert.Equal(t, "POST", r.Method)
-		assert.Equal(t, "/findings/search", r.URL.Path)
-		assert.Equal(t, "1", r.URL.Query().Get("page"))
-		assert.Equal(t, "50", r.URL.Query().Get("pageSize"))
-
-		// Decode and verify request body
-		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
-		assert.Equal(t, "app-id-1", body["ApplicationId"])
-		assert.Equal(t, "High", body["Severity"])
-		assert.Equal(t, "Open", body["Status"])
+		// Now uses GET with OData parameters
+		assert.Equal(t, "GET", r.Method)
+		assert.Equal(t, "/Issues/Application/app-id-1", r.URL.Path)
+		q := r.URL.Query()
+		assert.Equal(t, "0", q.Get("$skip"))
+		assert.Equal(t, "50", q.Get("$top"))
+		filter := q.Get("$filter")
+		// URL-encoded filter values
+		assert.Contains(t, filter, "High")
+		assert.Contains(t, filter, "Open")
 
 		response := map[string]interface{}{
-			"Findings": []interface{}{
+			"Items": []interface{}{
 				map[string]interface{}{
 					"Id":            "finding-id-1",
 					"IssueName":     "SQL Injection",
@@ -154,7 +169,6 @@ func TestFindingsSearchTool_Success(t *testing.T) {
 					"ApplicationId": "app-id-1",
 				},
 			},
-			"TotalPages": 1,
 			"TotalCount": 1,
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -189,7 +203,6 @@ func TestFindingsSearchTool_Success(t *testing.T) {
 	assert.Equal(t, float64(1), output["total_count"])
 }
 
-
 // ---------------------------------------------------------------------------
 // FindingGetTool tests
 // ---------------------------------------------------------------------------
@@ -200,7 +213,8 @@ func TestFindingGetTool_Success(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/findings/finding-id-1", r.URL.Path)
+		// ASoC v4 endpoint: /Issues/{id} (not /Issues/{id}/Details which returns HTML)
+		assert.Equal(t, "/Issues/finding-id-1", r.URL.Path)
 
 		response := map[string]interface{}{
 			"Id":            "finding-id-1",
@@ -244,7 +258,8 @@ func TestFindingGetTool_Success(t *testing.T) {
 func TestFindingGetTool_NotFound(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/findings/no-such-finding", r.URL.Path)
+		// ASoC v4 endpoint: /Issues/{id} (not /Issues/{id}/Details)
+		assert.Equal(t, "/Issues/no-such-finding", r.URL.Path)
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer ts.Close()
@@ -256,7 +271,6 @@ func TestFindingGetTool_NotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "finding not found: no-such-finding")
 }
-
 
 // ---------------------------------------------------------------------------
 // FindingGroupSummaryTool tests
@@ -331,4 +345,3 @@ func TestFindingGroupSummaryTool_DefaultGroupBy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
 }
-

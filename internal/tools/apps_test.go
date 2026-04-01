@@ -89,21 +89,33 @@ func TestAppsListTool_Success(t *testing.T) {
 }
 
 func TestAppGetTool_Success(t *testing.T) {
-	// Create a mock HTTP server
+	// Create a mock HTTP server that returns a list of apps
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check that the request has the correct headers
 		assert.Equal(t, "test-key-id:test-key-secret", r.Header.Get("X-Api-Key"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/Apps/test-app-id-1", r.URL.Path)
+		// New implementation uses list endpoint with query params
+		assert.Equal(t, "/Apps", r.URL.Path)
 
-		// Return mock response matching ASoC field names
+		// Return a list with multiple apps, including the one we want
 		response := map[string]interface{}{
-			"Id":           "test-app-id-1",
-			"Name":         "Test App 1",
-			"Description":  "A test application",
-			"BusinessUnit": "Engineering",
+			"Items": []interface{}{
+				map[string]interface{}{
+					"Id":           "test-app-id-2",
+					"Name":         "Other App",
+					"Description":  "Not the one we want",
+					"BusinessUnit": "Sales",
+				},
+				map[string]interface{}{
+					"Id":           "test-app-id-1",
+					"Name":         "Test App 1",
+					"Description":  "A test application",
+					"BusinessUnit": "Engineering",
+				},
+			},
+			"TotalCount": 2,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
@@ -197,17 +209,27 @@ func TestAppsSearchTool_Success(t *testing.T) {
 }
 
 func TestAppGetTool_NotFound(t *testing.T) {
-	// Create a mock HTTP server
+	// Create a mock HTTP server that returns a list without the requested app
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check that the request has the correct headers
 		assert.Equal(t, "test-key-id:test-key-secret", r.Header.Get("X-Api-Key"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/Apps/non-existent-id", r.URL.Path) // path after base URL
+		assert.Equal(t, "/Apps", r.URL.Path) // Uses list endpoint
 
-		// Return 404
-		w.WriteHeader(http.StatusNotFound)
+		// Return a list with different apps (not the one we're looking for)
+		response := map[string]interface{}{
+			"Items": []interface{}{
+				map[string]interface{}{
+					"Id":   "other-app-id",
+					"Name": "Other App",
+				},
+			},
+			"TotalCount": 1,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
 	}))
 	defer ts.Close()
 
@@ -217,7 +239,7 @@ func TestAppGetTool_NotFound(t *testing.T) {
 	// Create the tool with readonly disabled (nil means not readonly)
 	tool := NewAppGetTool(c, nil)
 
-	// Call the tool
+	// Call the tool with an ID that's not in the list
 	_, err := tool.Handle(context.Background(), map[string]interface{}{"id": "non-existent-id"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "application not found: non-existent-id")

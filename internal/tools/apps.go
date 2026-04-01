@@ -133,28 +133,38 @@ func (t *AppGetTool) Handle(ctx context.Context, args map[string]interface{}) (s
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/Apps/%s", id)
-	resp, err := t.client.Get(path)
+	// ASoC v4 API does not support GET on /Apps/{id}.
+	// Use the list endpoint and filter by ID.
+	resp, err := t.client.Get("/Apps?page=1&pageSize=100")
 	if err != nil {
 		return "", fmt.Errorf("get application: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
-		return "", fmt.Errorf("application not found: %s", id)
+	if resp.StatusCode == 401 {
+		return "", fmt.Errorf("unauthorized: check your API key credentials")
 	}
 	if resp.StatusCode != 200 {
 		return "", client.ParseError(resp)
 	}
 
-	var raw map[string]any
-	if err := client.DecodeJSON(resp, &raw); err != nil {
+	var result struct {
+		Items []map[string]any `json:"Items"`
+	}
+	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	app := normalize.Application(raw)
-	b, _ := json.Marshal(app)
-	return string(b), nil
+	// Find the app with the matching ID
+	for _, raw := range result.Items {
+		if raw["Id"] == id {
+			app := normalize.Application(raw)
+			b, _ := json.Marshal(app)
+			return string(b), nil
+		}
+	}
+
+	return "", fmt.Errorf("application not found: %s", id)
 }
 
 func (t *AppGetTool) GetEnforcerProfile() framework.EnforcerProfile {

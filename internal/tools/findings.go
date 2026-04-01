@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/karldane/appscan-asoc-mcp/internal/client"
 	"github.com/karldane/appscan-asoc-mcp/internal/model"
@@ -61,13 +63,21 @@ func (t *FindingsListTool) Handle(ctx context.Context, args map[string]interface
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/findings?page=%d&pageSize=%d", page, pageSize)
-
-	if v, ok := args["application_id"].(string); ok && v != "" {
-		path += "&applicationId=" + v
+	// ASoC v4 uses /Issues/Application/{appId} for listing issues
+	// with OData $select and $filter parameters
+	applicationID, _ := args["application_id"].(string)
+	if applicationID == "" {
+		return "", fmt.Errorf("application_id is required")
 	}
+
+	path := fmt.Sprintf("/Issues/Application/%s?$skip=%d&$top=%d",
+		applicationID, (page-1)*pageSize, pageSize)
+
 	if v, ok := args["scan_id"].(string); ok && v != "" {
-		path += "&scanId=" + v
+		// URL-encode the filter value to handle special characters
+		filterValue := fmt.Sprintf("ScanId eq '%s'", v)
+		encodedFilter := url.QueryEscape(filterValue)
+		path += "&$filter=" + encodedFilter
 	}
 
 	resp, err := t.client.Get(path)
@@ -81,16 +91,15 @@ func (t *FindingsListTool) Handle(ctx context.Context, args map[string]interface
 	}
 
 	var result struct {
-		Findings   []map[string]any `json:"Findings"`
-		TotalPages int              `json:"TotalPages"`
-		TotalCount int              `json:"TotalCount"`
+		Items []map[string]any `json:"Items"`
+		Count int              `json:"TotalCount"`
 	}
 	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	findings := make([]*model.Finding, 0, len(result.Findings))
-	for _, raw := range result.Findings {
+	findings := make([]*model.Finding, 0, len(result.Items))
+	for _, raw := range result.Items {
 		findings = append(findings, normalize.Finding(raw))
 	}
 
@@ -98,8 +107,7 @@ func (t *FindingsListTool) Handle(ctx context.Context, args map[string]interface
 		"findings":    findings,
 		"page":        page,
 		"page_size":   pageSize,
-		"total_pages": result.TotalPages,
-		"total_count": result.TotalCount,
+		"total_count": result.Count,
 	}
 
 	b, _ := json.Marshal(output)
@@ -178,44 +186,38 @@ func (t *FindingsSearchTool) Handle(ctx context.Context, args map[string]interfa
 		pageSize = int(v)
 	}
 
-	path := fmt.Sprintf("/findings/search?page=%d&pageSize=%d", page, pageSize)
-
-	if v, ok := args["application_id"].(string); ok && v != "" {
-		path += "&applicationId=" + v
+	// ASoC v4 uses OData-style filtering on /Issues/Application/{appId}
+	applicationID, _ := args["application_id"].(string)
+	if applicationID == "" {
+		return "", fmt.Errorf("application_id is required")
 	}
+
+	// Build OData filter
+	var filters []string
+
 	if v, ok := args["severity"].(string); ok && v != "" {
-		path += "&severity=" + v
+		// Normalize severity for ASoC (capitalize first letter)
+		normalizedSeverity := strings.ToUpper(v[:1]) + strings.ToLower(v[1:])
+		filters = append(filters, fmt.Sprintf("Severity eq '%s'", normalizedSeverity))
 	}
 	if v, ok := args["status"].(string); ok && v != "" {
-		path += "&status=" + v
+		// ASoC uses "Open", "Fixed", etc.
+		normalizedStatus := strings.ToUpper(v[:1]) + strings.ToLower(v[1:])
+		filters = append(filters, fmt.Sprintf("Status eq '%s'", normalizedStatus))
+	}
+	if v, ok := args["issue_type"].(string); ok && v != "" {
+		filters = append(filters, fmt.Sprintf("IssueType eq '%s'", v))
 	}
 
-	type SearchRequest struct {
-		ApplicationID string `json:"ApplicationId,omitempty"`
-		Severity      string `json:"Severity,omitempty"`
-		Status        string `json:"Status,omitempty"`
-		IssueType     string `json:"IssueType,omitempty"`
-		Text          string `json:"Text,omitempty"`
+	filterClause := ""
+	if len(filters) > 0 {
+		filterClause = "&$filter=" + url.QueryEscape(strings.Join(filters, " and "))
 	}
 
-	req := SearchRequest{}
-	if v, ok := args["application_id"].(string); ok {
-		req.ApplicationID = v
-	}
-	if v, ok := args["severity"].(string); ok {
-		req.Severity = v
-	}
-	if v, ok := args["status"].(string); ok {
-		req.Status = v
-	}
-	if v, ok := args["issue_type"].(string); ok {
-		req.IssueType = v
-	}
-	if v, ok := args["text"].(string); ok {
-		req.Text = v
-	}
+	path := fmt.Sprintf("/Issues/Application/%s?$skip=%d&$top=%d%s",
+		applicationID, (page-1)*pageSize, pageSize, filterClause)
 
-	resp, err := t.client.Post(path, req)
+	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("search findings: %w", err)
 	}
@@ -226,16 +228,15 @@ func (t *FindingsSearchTool) Handle(ctx context.Context, args map[string]interfa
 	}
 
 	var result struct {
-		Findings   []map[string]any `json:"Findings"`
-		TotalPages int              `json:"TotalPages"`
-		TotalCount int              `json:"TotalCount"`
+		Items []map[string]any `json:"Items"`
+		Count int              `json:"TotalCount"`
 	}
 	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	findings := make([]*model.Finding, 0, len(result.Findings))
-	for _, raw := range result.Findings {
+	findings := make([]*model.Finding, 0, len(result.Items))
+	for _, raw := range result.Items {
 		findings = append(findings, normalize.Finding(raw))
 	}
 
@@ -243,8 +244,7 @@ func (t *FindingsSearchTool) Handle(ctx context.Context, args map[string]interfa
 		"findings":    findings,
 		"page":        page,
 		"page_size":   pageSize,
-		"total_pages": result.TotalPages,
-		"total_count": result.TotalCount,
+		"total_count": result.Count,
 	}
 
 	b, _ := json.Marshal(output)
@@ -292,7 +292,8 @@ func (t *FindingGetTool) Handle(ctx context.Context, args map[string]interface{}
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/findings/%s", id)
+	// ASoC v4 uses /Issues/{id} for getting issue details (JSON)
+	path := fmt.Sprintf("/Issues/%s", id)
 	resp, err := t.client.Get(path)
 	if err != nil {
 		return "", fmt.Errorf("get finding: %w", err)
