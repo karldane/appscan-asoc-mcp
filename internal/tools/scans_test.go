@@ -136,15 +136,23 @@ func TestScanGetTool_Success(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/scans/scan-id-1", r.URL.Path)
+		// Now uses list endpoint with $top filter
+		assert.Equal(t, "/Scans", r.URL.Path)
+		assert.Equal(t, "500", r.URL.Query().Get("$top"))
 
+		// Return list containing the scan we want
 		response := map[string]interface{}{
-			"Id":              "scan-id-1",
-			"ApplicationId":   "app-id-1",
-			"State":           "Ready",
-			"ExecutionStatus": "Started",
-			"ScanType":        "DAST",
-			"Url":             "https://example.com",
+			"Items": []interface{}{
+				map[string]interface{}{
+					"Id":              "scan-id-1",
+					"ApplicationId":   "app-id-1",
+					"State":           "Ready",
+					"ExecutionStatus": "Started",
+					"ScanType":        "DAST",
+					"Url":             "https://example.com",
+				},
+			},
+			"TotalCount": 1,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
@@ -178,8 +186,21 @@ func TestScanGetTool_Success(t *testing.T) {
 func TestScanGetTool_NotFound(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/scans/no-such-scan", r.URL.Path)
-		w.WriteHeader(http.StatusNotFound)
+		// Now uses list endpoint
+		assert.Equal(t, "/Scans", r.URL.Path)
+
+		// Return list without the scan we're looking for
+		response := map[string]interface{}{
+			"Items": []interface{}{
+				map[string]interface{}{
+					"Id":   "other-scan-id",
+					"Name": "Other Scan",
+				},
+			},
+			"TotalCount": 1,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
 	}))
 	defer ts.Close()
 
@@ -214,14 +235,22 @@ func TestScanStatusTool_Success(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "test-key-id:test-key-secret", r.Header.Get("X-Api-Key"))
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/scans/scan-id-99", r.URL.Path)
+		// Now uses list endpoint with $top filter
+		assert.Equal(t, "/Scans", r.URL.Path)
+		assert.Equal(t, "500", r.URL.Query().Get("$top"))
 
+		// Return list containing the scan we want
 		response := map[string]interface{}{
-			"Id":              "scan-id-99",
-			"State":           "Running",
-			"ExecutionStatus": "Queued",
-			"SubmissionTime":  "2024-01-15T10:00:00Z",
-			"StartTime":       "2024-01-15T10:05:00Z",
+			"Items": []interface{}{
+				map[string]interface{}{
+					"Id":              "scan-id-99",
+					"State":           "Running",
+					"ExecutionStatus": "Queued",
+					"SubmissionTime":  "2024-01-15T10:00:00Z",
+					"StartTime":       "2024-01-15T10:05:00Z",
+				},
+			},
+			"TotalCount": 1,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)

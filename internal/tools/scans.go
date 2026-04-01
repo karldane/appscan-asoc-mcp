@@ -170,28 +170,39 @@ func (t *ScanGetTool) Handle(ctx context.Context, args map[string]interface{}) (
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/scans/%s", id)
-	resp, err := t.client.Get(path)
+	// ASoC v4 API does not support GET on /Scans/{id} (returns 405).
+	// Use the list endpoint and filter by ID.
+	// Note: API has a limit of 500 for $top parameter
+	resp, err := t.client.Get("/Scans?$top=500")
 	if err != nil {
 		return "", fmt.Errorf("get scan: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
-		return "", fmt.Errorf("scan not found: %s", id)
+	if resp.StatusCode == 401 {
+		return "", fmt.Errorf("unauthorized: check your API key credentials")
 	}
 	if resp.StatusCode != 200 {
 		return "", client.ParseError(resp)
 	}
 
-	var raw map[string]any
-	if err := client.DecodeJSON(resp, &raw); err != nil {
+	var result struct {
+		Items []map[string]any `json:"Items"`
+	}
+	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	scan := normalize.Scan(raw)
-	b, _ := json.Marshal(scan)
-	return string(b), nil
+	// Find the scan with matching ID
+	for _, raw := range result.Items {
+		if raw["Id"] == id {
+			scan := normalize.Scan(raw)
+			b, _ := json.Marshal(scan)
+			return string(b), nil
+		}
+	}
+
+	return "", fmt.Errorf("scan not found: %s", id)
 }
 
 func (t *ScanGetTool) GetEnforcerProfile() framework.EnforcerProfile {
@@ -238,38 +249,49 @@ func (t *ScanStatusTool) Handle(ctx context.Context, args map[string]interface{}
 		return "", fmt.Errorf("id is required")
 	}
 
-	path := fmt.Sprintf("/scans/%s", id)
-	resp, err := t.client.Get(path)
+	// ASoC v4 API does not support GET on /Scans/{id} (returns 405).
+	// Use the list endpoint and filter by ID.
+	// Note: API has a limit of 500 for $top parameter
+	resp, err := t.client.Get("/Scans?$top=500")
 	if err != nil {
 		return "", fmt.Errorf("get scan status: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
-		return "", fmt.Errorf("scan not found: %s", id)
+	if resp.StatusCode == 401 {
+		return "", fmt.Errorf("unauthorized: check your API key credentials")
 	}
 	if resp.StatusCode != 200 {
 		return "", client.ParseError(resp)
 	}
 
-	var raw map[string]any
-	if err := client.DecodeJSON(resp, &raw); err != nil {
+	var result struct {
+		Items []map[string]any `json:"Items"`
+	}
+	if err := client.DecodeJSON(resp, &result); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	scan := normalize.Scan(raw)
+	// Find the scan with matching ID
+	for _, raw := range result.Items {
+		if raw["Id"] == id {
+			scan := normalize.Scan(raw)
 
-	output := map[string]any{
-		"id":           scan.ID,
-		"status":       scan.Status,
-		"queue_state":  scan.QueueState,
-		"submitted_at": scan.SubmittedAt,
-		"started_at":   scan.StartedAt,
-		"completed_at": scan.CompletedAt,
+			output := map[string]any{
+				"id":           scan.ID,
+				"status":       scan.Status,
+				"queue_state":  scan.QueueState,
+				"submitted_at": scan.SubmittedAt,
+				"started_at":   scan.StartedAt,
+				"completed_at": scan.CompletedAt,
+			}
+
+			b, _ := json.Marshal(output)
+			return string(b), nil
+		}
 	}
 
-	b, _ := json.Marshal(output)
-	return string(b), nil
+	return "", fmt.Errorf("scan not found: %s", id)
 }
 
 func (t *ScanStatusTool) GetEnforcerProfile() framework.EnforcerProfile {
