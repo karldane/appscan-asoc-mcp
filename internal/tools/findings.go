@@ -114,7 +114,7 @@ func (t *FindingsListTool) Handle(ctx context.Context, args map[string]interface
 	return string(b), nil
 }
 
-func (t *FindingsListTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *FindingsListTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -251,7 +251,7 @@ func (t *FindingsSearchTool) Handle(ctx context.Context, args map[string]interfa
 	return string(b), nil
 }
 
-func (t *FindingsSearchTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *FindingsSearchTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -317,7 +317,7 @@ func (t *FindingGetTool) Handle(ctx context.Context, args map[string]interface{}
 	return string(b), nil
 }
 
-func (t *FindingGetTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *FindingGetTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -405,7 +405,7 @@ func (t *FindingGroupSummaryTool) Handle(ctx context.Context, args map[string]in
 	return string(b), nil
 }
 
-func (t *FindingGroupSummaryTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *FindingGroupSummaryTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskLow),
 		framework.WithImpact(framework.ImpactRead),

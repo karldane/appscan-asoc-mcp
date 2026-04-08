@@ -83,7 +83,7 @@ func (t *AssetGroupsListTool) Handle(ctx context.Context, args map[string]interf
 	return string(b), nil
 }
 
-func (t *AssetGroupsListTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *AssetGroupsListTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskLow),
 		framework.WithImpact(framework.ImpactRead),
@@ -165,7 +165,7 @@ func (t *PoliciesListTool) Handle(ctx context.Context, args map[string]interface
 	return string(b), nil
 }
 
-func (t *PoliciesListTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *PoliciesListTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskLow),
 		framework.WithImpact(framework.ImpactRead),
@@ -243,7 +243,7 @@ func (t *ComplianceSummaryTool) Handle(ctx context.Context, args map[string]inte
 	return string(b), nil
 }
 
-func (t *ComplianceSummaryTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *ComplianceSummaryTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskLow),
 		framework.WithImpact(framework.ImpactRead),

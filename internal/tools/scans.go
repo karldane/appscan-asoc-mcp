@@ -128,7 +128,7 @@ func (t *ScansListTool) Handle(ctx context.Context, args map[string]interface{})
 	return string(b), nil
 }
 
-func (t *ScansListTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *ScansListTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -205,7 +205,7 @@ func (t *ScanGetTool) Handle(ctx context.Context, args map[string]interface{}) (
 	return "", fmt.Errorf("scan not found: %s", id)
 }
 
-func (t *ScanGetTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *ScanGetTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskMed),
 		framework.WithImpact(framework.ImpactRead),
@@ -294,7 +294,7 @@ func (t *ScanStatusTool) Handle(ctx context.Context, args map[string]interface{}
 	return "", fmt.Errorf("scan not found: %s", id)
 }
 
-func (t *ScanStatusTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *ScanStatusTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskLow),
 		framework.WithImpact(framework.ImpactRead),
@@ -404,7 +404,7 @@ func (t *DASTScanStartTool) Handle(ctx context.Context, args map[string]interfac
 	return string(b), nil
 }
 
-func (t *DASTScanStartTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *DASTScanStartTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskHigh),
 		framework.WithImpact(framework.ImpactWrite),
@@ -505,7 +505,7 @@ func (t *DASTScanFromTemplateTool) Handle(ctx context.Context, args map[string]i
 	return string(b), nil
 }
 
-func (t *DASTScanFromTemplateTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *DASTScanFromTemplateTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskHigh),
 		framework.WithImpact(framework.ImpactWrite),
@@ -571,7 +571,7 @@ func (t *ScanCancelTool) Handle(ctx context.Context, args map[string]interface{}
 	return string(b), nil
 }
 
-func (t *ScanCancelTool) GetEnforcerProfile() framework.EnforcerProfile {
+func (t *ScanCancelTool) GetEnforcerProfile() *framework.EnforcerProfile {
 	return framework.NewEnforcerProfile(
 		framework.WithRisk(framework.RiskHigh),
 		framework.WithImpact(framework.ImpactWrite),

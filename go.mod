@@ -3,7 +3,7 @@ module github.com/karldane/appscan-asoc-mcp
 go 1.25.8
 
 require (
-	github.com/karldane/mcp-framework v0.1.0
+	github.com/karldane/mcp-framework v0.2.0
 	github.com/mark3labs/mcp-go v0.46.0
 	github.com/stretchr/testify v1.11.1
 )
